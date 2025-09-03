@@ -1,0 +1,16 @@
+Age → “What is your age?”
+
+BMI (Body Mass Index) → Instead of asking BMI directly:
+“What is your height (in cm) and weight (in kg)?” → (BMI can be calculated = weight / height²).
+
+Servings of vegetables & fruits daily → “On average, how many servings of fruits and vegetables do you eat per day?” (0–5+)
+
+Servings of processed/junk food weekly → “How many times per week do you eat processed or fast food (like chips, soft drinks, burgers, instant noodles, etc.)?”
+
+Hours of exercise weekly → “On average, how many hours per week do you spend doing physical activities (exercise, walking, sports, yoga, etc.)?”
+
+Hours of sleep daily → “On average, how many hours do you sleep per night?”
+
+Alcohol units weekly → “How many alcoholic drinks do you usually have per week?”
+
+Is smoker → “Do you currently smoke?” (Yes/No)

@@ -32,6 +32,11 @@ HEART_SCALER_PATH = os.path.join(SAVED_MODELS_DIR, "heart_scaler.joblib")
 heart_model = joblib.load(HEART_MODEL_PATH)
 heart_scaler = joblib.load(HEART_SCALER_PATH)
 
+# Risk Model
+risk_model = joblib.load(os.path.join(SAVED_MODELS_DIR, "risk_model.joblib"))
+risk_scaler = joblib.load(os.path.join(SAVED_MODELS_DIR, "risk_scaler.joblib"))
+
+
 # Define the input data structure using Pydantic
 class KidneyPatientData(BaseModel):
     age: float
@@ -85,6 +90,16 @@ class HeartPatientData(BaseModel):
     slope: int
     ca: int
     thal: int
+
+class LifestyleData(BaseModel):
+    age: int
+    bmi: float
+    servings_veg_fruit_daily: int
+    servings_processed_food_weekly: int
+    hours_exercise_weekly: int
+    hours_sleep_daily: float
+    alcohol_units_weekly: int
+    is_smoker: int # 0 for No, 1 for Yes
 
 # Health check endpoint
 @app.get("/")
@@ -186,3 +201,36 @@ def predict_heart(data: HeartPatientData):
         "confidence_score": f"{confidence:.2f}"
     }
 
+@app.post("/predict/risk")
+def predict_risk(data: LifestyleData):
+    input_data = pd.DataFrame([data.model_dump()])
+
+    feature_order = [
+        "age",
+        "bmi",
+        "servings_veg_fruit_daily",
+        "servings_processed_food_weekly",
+        "hours_exercise_weekly",
+        "hours_sleep_daily",
+        "alcohol_units_weekly",
+        "is_smoker"
+    ]
+    input_data = input_data[feature_order]
+
+    scaled_data = risk_scaler.transform(input_data)
+    prediction = risk_model.predict(scaled_data)[0]  # e.g. [1, 0, 1]
+    probability = risk_model.predict_proba(scaled_data)
+
+    # Interpret the multi-output prediction
+    heart_risk = "High Risk" if prediction[0] == 1 else "Low Risk"
+    liver_risk = "High Risk" if prediction[1] == 1 else "Low Risk"
+    kidney_risk = "High Risk" if prediction[2] == 1 else "Low Risk"
+
+    return {
+        "disease": "Lifestyle Risk Assessment",
+        "prediction": {
+            "heart_disease_risk": heart_risk,
+            "liver_disease_risk": liver_risk,
+            "kidney_disease_risk": kidney_risk
+        }
+    }
