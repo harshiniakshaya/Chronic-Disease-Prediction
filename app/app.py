@@ -5,14 +5,15 @@ import joblib
 import pandas as pd
 
 # Create a FastAPI app instance
-app = FastAPI(title="Kidney Disease Prediction API")
+app = FastAPI(title="Disease Prediction API")
 
 # Load the model and scaler from within the 'app' folder
-model = joblib.load('../saved_models/kidney_model.joblib')
-scaler = joblib.load('../saved_models/kidney_scaler.joblib')
+# Kidney
+kidney_model = joblib.load('../saved_models/kidney_model.joblib')
+kidney_scaler = joblib.load('../saved_models/kidney_scaler.joblib')
 
 # Define the input data structure using Pydantic
-class PatientData(BaseModel):
+class KidneyPatientData(BaseModel):
     age: float
     bp: float
     sg: float
@@ -39,11 +40,10 @@ class PatientData(BaseModel):
     ane: int
 
 # Define the prediction endpoint
-@app.post("/predict")
-def predict(data: PatientData):
+@app.post("/predict/kidney")
+def predict_kidney(data: KidneyPatientData):
     input_data = pd.DataFrame([data.dict()])
-    
-    # This is crucial: Ensure the column order is the same as the training data
+
     feature_order = [
         "age", "bp", "sg", "al", "su",
         "rbc", "pc", "pcc", "ba", "bgr",
@@ -53,9 +53,9 @@ def predict(data: PatientData):
     ]
     input_data = input_data[feature_order]
 
-    scaled_data = scaler.transform(input_data)
-    prediction = model.predict(scaled_data)
-    probability = model.predict_proba(scaled_data)
+    scaled_data = kidney_scaler.transform(input_data)
+    prediction = kidney_model.predict(scaled_data)
+    probability = kidney_model.predict_proba(scaled_data)
 
     if prediction[0] == 1:
         result = "Chronic Kidney Disease (CKD)"
@@ -65,6 +65,7 @@ def predict(data: PatientData):
         confidence = probability[0][0]
 
     return {
+        "disease": "Kidney Disease",
         "prediction": result,
         "confidence_score": f"{confidence:.2f}"
     }
