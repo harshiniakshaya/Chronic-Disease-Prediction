@@ -26,6 +26,12 @@ LIVER_SCALER_PATH = os.path.join(SAVED_MODELS_DIR, "liver_scaler.joblib")
 liver_model = joblib.load(LIVER_MODEL_PATH)
 liver_scaler = joblib.load(LIVER_SCALER_PATH)
 
+# Heart Disease Model
+HEART_MODEL_PATH = os.path.join(SAVED_MODELS_DIR, "heart_model.joblib")
+HEART_SCALER_PATH = os.path.join(SAVED_MODELS_DIR, "heart_scaler.joblib")
+heart_model = joblib.load(HEART_MODEL_PATH)
+heart_scaler = joblib.load(HEART_SCALER_PATH)
+
 # Define the input data structure using Pydantic
 class KidneyPatientData(BaseModel):
     age: float
@@ -64,6 +70,21 @@ class LiverPatientData(BaseModel):
     Albumin: float
     Albumin_and_Globulin_Ratio: float
     Gender_Male: int
+
+class HeartPatientData(BaseModel):
+    age: int
+    sex: int
+    cp: int
+    trestbps: int
+    chol: int
+    fbs: int
+    restecg: int
+    thalach: int
+    exang: int
+    oldpeak: float
+    slope: int
+    ca: int
+    thal: int
 
 # Health check endpoint
 @app.get("/")
@@ -136,4 +157,32 @@ def predict_liver(data: LiverPatientData):
         "prediction": result,
         "confidence_score": f"{confidence:.2f}"
     }
-    
+
+@app.post("/predict/heart")
+def predict_heart(data: HeartPatientData):
+    input_data = pd.DataFrame([data.model_dump()])
+
+    feature_order = [
+        "age", "sex", "cp", "trestbps", "chol",
+        "fbs", "restecg", "thalach", "exang", "oldpeak",
+        "slope", "ca", "thal"
+    ]
+    input_data = input_data[feature_order]
+
+    scaled_data = heart_scaler.transform(input_data)
+    prediction = heart_model.predict(scaled_data)
+    probability = heart_model.predict_proba(scaled_data)
+
+    if prediction[0] == 1:
+        result = "Heart Disease Detected"
+        confidence = probability[0][1]
+    else:
+        result = "No Heart Disease Detected"
+        confidence = probability[0][0]
+
+    return {
+        "disease": "Heart Disease",
+        "prediction": result,
+        "confidence_score": f"{confidence:.2f}"
+    }
+
