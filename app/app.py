@@ -3,14 +3,19 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import joblib
 import pandas as pd
+import os
 
 # Create a FastAPI app instance
 app = FastAPI(title="Disease Prediction API")
 
 # Load the model and scaler from within the 'app' folder
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 # Kidney
-kidney_model = joblib.load('../saved_models/kidney_model.joblib')
-kidney_scaler = joblib.load('../saved_models/kidney_scaler.joblib')
+KIDNEY_MODEL_PATH = os.path.join(BASE_DIR, "saved_models", "kidney_model.joblib")
+KIDNEY_SCALER_PATH = os.path.join(BASE_DIR, "saved_models", "kidney_scaler.joblib")
+kidney_model = joblib.load(KIDNEY_MODEL_PATH)
+kidney_scaler = joblib.load(KIDNEY_SCALER_PATH)
 
 # Define the input data structure using Pydantic
 class KidneyPatientData(BaseModel):
